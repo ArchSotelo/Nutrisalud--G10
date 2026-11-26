@@ -18,7 +18,11 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from Trabajador t where t.id = :id")
-    Optional<Trabajador> buscarParaEdicion(@Param("id") Long id);
+    Optional<Trabajador> buscarConBloqueoDeEscritura(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select t from Trabajador t where t.id = :id")
+    Optional<Trabajador> buscarConBloqueoDeLectura(@Param("id") Long id);
 
     @Modifying
     @Query("delete from Trabajador t where t.id = :id")

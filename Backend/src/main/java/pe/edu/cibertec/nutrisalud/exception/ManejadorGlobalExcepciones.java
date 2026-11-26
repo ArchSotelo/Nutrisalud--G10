@@ -48,6 +48,11 @@ public class ManejadorGlobalExcepciones {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, excepcion.getMessage());
     }
 
+    @ExceptionHandler(MedicoNoEncontradoException.class)
+    public ProblemDetail medicoNoEncontrado(MedicoNoEncontradoException excepcion) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, excepcion.getMessage());
+    }
+
     private ErrorCampo aErrorCampo(FieldError error) {
         String campo = "dniValido".equals(error.getField()) ? "nroDocumento" : error.getField();
         return new ErrorCampo(campo, error.getDefaultMessage());

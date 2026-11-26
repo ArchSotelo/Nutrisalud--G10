@@ -59,7 +59,7 @@ public class TrabajadorService {
 
     @Transactional
     public TrabajadorResponseDTO actualizar(Long id, TrabajadorRequestDTO solicitud) {
-        Trabajador trabajador = trabajadores.buscarParaEdicion(id)
+        Trabajador trabajador = trabajadores.buscarConBloqueoDeEscritura(id)
                 .orElseThrow(() -> new TrabajadorNoEncontradoException(id));
         Empresa empresa = buscarEmpresa(solicitud.idEmpresa());
 
