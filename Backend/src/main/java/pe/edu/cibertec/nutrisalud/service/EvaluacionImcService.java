@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.cibertec.nutrisalud.dto.EvaluacionImcRequestDTO;
@@ -41,6 +42,18 @@ public class EvaluacionImcService {
         return evaluaciones.findById(id)
                 .map(mapper::aRespuesta)
                 .orElseThrow(() -> new EvaluacionImcNoEncontradaException(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<EvaluacionImcResponseDTO> listarHistorial(Long idTrabajador) {
+        if (!trabajadores.existsById(idTrabajador)) {
+            throw new TrabajadorNoEncontradoException(idTrabajador);
+        }
+
+        return evaluaciones.findAllByTrabajador_IdOrderByFechaEvaluacionDescIdDesc(idTrabajador)
+                .stream()
+                .map(mapper::aRespuesta)
+                .toList();
     }
 
     @Transactional

@@ -39,8 +39,8 @@ public class ManejadorGlobalExcepciones {
     }
 
     @ExceptionHandler(TrabajadorNoEncontradoException.class)
-    public ProblemDetail trabajadorNoEncontrado(TrabajadorNoEncontradoException excepcion) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, excepcion.getMessage());
+    public ProblemDetail trabajadorNoEncontrado() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Trabajador no encontrado");
     }
 
     @ExceptionHandler(TrabajadorConReferenciasException.class)

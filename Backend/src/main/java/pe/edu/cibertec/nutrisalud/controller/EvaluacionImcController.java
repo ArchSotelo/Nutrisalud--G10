@@ -1,6 +1,7 @@
 package pe.edu.cibertec.nutrisalud.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.cibertec.nutrisalud.dto.EvaluacionImcRequestDTO;
@@ -19,6 +20,11 @@ public class EvaluacionImcController {
     @GetMapping("/{id}")
     public EvaluacionImcResponseDTO consultar(@PathVariable Long id) {
         return servicio.consultar(id);
+    }
+
+    @GetMapping("/trabajador/{idTrabajador}")
+    public List<EvaluacionImcResponseDTO> listarHistorial(@PathVariable Long idTrabajador) {
+        return servicio.listarHistorial(idTrabajador);
     }
 
     @PostMapping

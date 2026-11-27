@@ -151,6 +151,61 @@ class EvaluacionImcMySqlTest {
                 .andExpect(jsonPath("$.detail").value("No existe una evaluación de IMC con ID " + Long.MAX_VALUE));
     }
 
+    @Test
+    void recuperaEvaluacionesDeEseTrabajadorEnOrdenCronologicoInverso() throws Exception {
+        jdbc.update("""
+                INSERT INTO evaluacion_imc
+                    (id_trabajador, id_usuario, fecha_evaluacion, peso_kg, talla_m, imc, clasificacion)
+                VALUES (?, ?, '2000-01-01 10:00:00', 100, 2, 25.00, 'SOBREPESO'),
+                       (?, ?, '2000-01-01 10:00:00', 120, 2, 30.00, 'OBESIDAD')
+                """, trabajador, medico, trabajador, medico);
+        mvc.perform(post("/api/evaluaciones-imc").contentType(APPLICATION_JSON)
+                        .content(solicitud(trabajador, medico, "73", "1.75")))
+                .andExpect(status().isCreated());
+
+        Long empresa = jdbc.queryForObject("SELECT id_empresa FROM trabajador WHERE id_trabajador = ?",
+                Long.class, trabajador);
+        String otroDocumento = "00129004";
+        jdbc.update("""
+                INSERT INTO trabajador (id_empresa, nro_documento, nombres, apellidos, correo)
+                VALUES (?, ?, 'Otro', 'Trabajador', 'otro.hu05@example.test')
+                """, empresa, otroDocumento);
+        Long otroTrabajador = jdbc.queryForObject("SELECT id_trabajador FROM trabajador WHERE nro_documento = ?",
+                Long.class, otroDocumento);
+        try {
+            mvc.perform(post("/api/evaluaciones-imc").contentType(APPLICATION_JSON)
+                            .content(solicitud(otroTrabajador, medico, "80", "2")))
+                    .andExpect(status().isCreated());
+
+            mvc.perform(get("/api/evaluaciones-imc/trabajador/{idTrabajador}", trabajador))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(3))
+                    .andExpect(jsonPath("$[0].idTrabajador").value(trabajador))
+                    .andExpect(jsonPath("$[0].imc").value(23.84))
+                    .andExpect(jsonPath("$[0].fechaEvaluacion").isString())
+                    .andExpect(jsonPath("$[1].imc").value(30.0))
+                    .andExpect(jsonPath("$[2].imc").value(25.0))
+                    .andExpect(jsonPath("$[2].fechaEvaluacion").value("2000-01-01T10:00:00Z"));
+        } finally {
+            jdbc.update("DELETE FROM evaluacion_imc WHERE id_trabajador = ?", otroTrabajador);
+            jdbc.update("DELETE FROM trabajador WHERE id_trabajador = ?", otroTrabajador);
+        }
+    }
+
+    @Test
+    void historialVacioParaUnTrabajadorSinEvaluaciones() throws Exception {
+        mvc.perform(get("/api/evaluaciones-imc/trabajador/{idTrabajador}", trabajador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void historialDevuelve404SiElTrabajadorNoExiste() throws Exception {
+        mvc.perform(get("/api/evaluaciones-imc/trabajador/{idTrabajador}", Long.MAX_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Trabajador no encontrado"));
+    }
+
     private void verificarSinEvaluaciones() {
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM evaluacion_imc WHERE id_trabajador = ?",
                 Integer.class, trabajador));
