@@ -16,6 +16,11 @@ public class EvaluacionImcController {
         this.servicio = servicio;
     }
 
+    @GetMapping("/{id}")
+    public EvaluacionImcResponseDTO consultar(@PathVariable Long id) {
+        return servicio.consultar(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EvaluacionImcResponseDTO registrar(@Valid @RequestBody EvaluacionImcRequestDTO solicitud) {

@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -79,6 +80,8 @@ class EvaluacionImcMySqlTest {
                 .andExpect(jsonPath("$.idImc").isNumber())
                 .andExpect(jsonPath("$.idTrabajador").value(trabajador))
                 .andExpect(jsonPath("$.idUsuario").value(medico))
+                .andExpect(jsonPath("$.trabajador.nombres").value("Ana"))
+                .andExpect(jsonPath("$.trabajador.apellidos").value("Prueba"))
                 .andExpect(jsonPath("$.fechaEvaluacion").isString())
                 .andExpect(jsonPath("$.imc").value(Double.parseDouble(esperado)))
                 .andExpect(jsonPath("$.clasificacion").value(clasificacion));
@@ -119,6 +122,33 @@ class EvaluacionImcMySqlTest {
                         .content(solicitud(trabajador, medico, "70", "1.75")))
                 .andExpect(status().isNotFound());
         verificarSinEvaluaciones();
+    }
+
+    @Test
+    void consultaResultadoGuardadoEIdentificaAlTrabajador() throws Exception {
+        jdbc.update("""
+                INSERT INTO evaluacion_imc
+                    (id_trabajador, id_usuario, peso_kg, talla_m, imc, clasificacion)
+                VALUES (?, ?, 100, 2, 25.00, 'SOBREPESO')
+                """, trabajador, medico);
+        Long id = jdbc.queryForObject("SELECT id_imc FROM evaluacion_imc WHERE id_trabajador = ?",
+                Long.class, trabajador);
+
+        mvc.perform(get("/api/evaluaciones-imc/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.idImc").value(id))
+                .andExpect(jsonPath("$.imc").value(25.0))
+                .andExpect(jsonPath("$.clasificacion").value("SOBREPESO"))
+                .andExpect(jsonPath("$.idTrabajador").value(trabajador))
+                .andExpect(jsonPath("$.trabajador.nombres").value("Ana"))
+                .andExpect(jsonPath("$.trabajador.apellidos").value("Prueba"));
+    }
+
+    @Test
+    void devuelve404ParaUnaEvaluacionInexistente() throws Exception {
+        mvc.perform(get("/api/evaluaciones-imc/{id}", Long.MAX_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("No existe una evaluación de IMC con ID " + Long.MAX_VALUE));
     }
 
     private void verificarSinEvaluaciones() {

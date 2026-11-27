@@ -13,6 +13,7 @@ import pe.edu.cibertec.nutrisalud.entity.ClasificacionImc;
 import pe.edu.cibertec.nutrisalud.entity.EvaluacionImc;
 import pe.edu.cibertec.nutrisalud.entity.Trabajador;
 import pe.edu.cibertec.nutrisalud.entity.Usuario;
+import pe.edu.cibertec.nutrisalud.exception.EvaluacionImcNoEncontradaException;
 import pe.edu.cibertec.nutrisalud.exception.MedicoNoEncontradoException;
 import pe.edu.cibertec.nutrisalud.exception.TrabajadorNoEncontradoException;
 import pe.edu.cibertec.nutrisalud.mapper.EvaluacionImcMapper;
@@ -33,6 +34,13 @@ public class EvaluacionImcService {
         this.usuarios = usuarios;
         this.evaluaciones = evaluaciones;
         this.mapper = mapper;
+    }
+
+    @Transactional(readOnly = true)
+    public EvaluacionImcResponseDTO consultar(Long id) {
+        return evaluaciones.findById(id)
+                .map(mapper::aRespuesta)
+                .orElseThrow(() -> new EvaluacionImcNoEncontradaException(id));
     }
 
     @Transactional
