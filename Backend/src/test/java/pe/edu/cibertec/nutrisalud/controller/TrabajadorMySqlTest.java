@@ -217,6 +217,38 @@ class TrabajadorMySqlTest {
         }
     }
 
+    @Test
+    void buscaDocumentoExactoConCerosInicialesEnDistintosTipos() throws Exception {
+        Long id = crearTrabajador("01234567");
+        crearTrabajador("01234568");
+        assertEquals(201, registrar(solicitud(empresaId, "CE", "\"01234567\"", "ana@example.test")));
+
+        mvc.perform(get("/api/trabajadores/buscar").param("nroDocumento", "01234567"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trabajadores.length()").value(2))
+                .andExpect(jsonPath("$.trabajadores[0].idTrabajador").value(id))
+                .andExpect(jsonPath("$.trabajadores[0].tipoDocumento").value("DNI"))
+                .andExpect(jsonPath("$.trabajadores[1].tipoDocumento").value("CE"))
+                .andExpect(jsonPath("$.mensaje").doesNotExist());
+    }
+
+    @Test
+    void devuelveMensajeSiLaBusquedaNoTieneCoincidencias() throws Exception {
+        crearTrabajador("01234567");
+
+        mvc.perform(get("/api/trabajadores/buscar").param("nroDocumento", "0123456"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trabajadores.length()").value(0))
+                .andExpect(jsonPath("$.mensaje").value("No se encontraron trabajadores con ese documento"));
+    }
+
+    @Test
+    void rechazaBusquedaSinDocumentoValido() throws Exception {
+        mvc.perform(get("/api/trabajadores/buscar")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/trabajadores/buscar").param("nroDocumento", "  "))
+                .andExpect(status().isBadRequest());
+    }
+
     private Long crearTrabajador(String documento) throws Exception {
         assertEquals(201, registrar(solicitud(empresaId, "DNI", "\"" + documento + "\"", "ana@example.test")));
         return jdbc.queryForObject("SELECT id_trabajador FROM trabajador WHERE id_empresa = ? AND nro_documento = ?",

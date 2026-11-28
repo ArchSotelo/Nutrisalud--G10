@@ -1,9 +1,11 @@
 package pe.edu.cibertec.nutrisalud.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import pe.edu.cibertec.nutrisalud.dto.BusquedaTrabajadoresResponseDTO;
 import pe.edu.cibertec.nutrisalud.dto.TrabajadorRequestDTO;
 import pe.edu.cibertec.nutrisalud.dto.TrabajadorResponseDTO;
 import pe.edu.cibertec.nutrisalud.service.TrabajadorService;
@@ -20,6 +22,14 @@ public class TrabajadorController {
     @GetMapping
     public List<TrabajadorResponseDTO> listar() {
         return servicio.listar();
+    }
+
+    @GetMapping("/buscar")
+    public BusquedaTrabajadoresResponseDTO buscar(
+            @RequestParam @Pattern(regexp = "(?=.*[!-~])[ -~]{1,20}") String nroDocumento) {
+        List<TrabajadorResponseDTO> trabajadores = servicio.buscarPorDocumento(nroDocumento);
+        String mensaje = trabajadores.isEmpty() ? "No se encontraron trabajadores con ese documento" : null;
+        return new BusquedaTrabajadoresResponseDTO(trabajadores, mensaje);
     }
 
     @GetMapping("/{id}")

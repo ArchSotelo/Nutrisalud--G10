@@ -51,6 +51,13 @@ public class TrabajadorService {
     }
 
     @Transactional(readOnly = true)
+    public List<TrabajadorResponseDTO> buscarPorDocumento(String nroDocumento) {
+        return trabajadores.findAllByNroDocumentoOrderByIdAsc(nroDocumento).stream()
+                .map(mapper::aRespuesta)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public TrabajadorResponseDTO consultar(Long id) {
         return trabajadores.findById(id)
                 .map(mapper::aRespuesta)

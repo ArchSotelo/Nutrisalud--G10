@@ -1,6 +1,7 @@
 package pe.edu.cibertec.nutrisalud.repository;
 
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -11,6 +12,8 @@ import pe.edu.cibertec.nutrisalud.entity.TipoDocumento;
 import pe.edu.cibertec.nutrisalud.entity.Trabajador;
 
 public interface TrabajadorRepository extends JpaRepository<Trabajador, Long> {
+    List<Trabajador> findAllByNroDocumentoOrderByIdAsc(String nroDocumento);
+
     boolean existsByTipoDocumentoAndNroDocumento(TipoDocumento tipoDocumento, String nroDocumento);
 
     boolean existsByTipoDocumentoAndNroDocumentoAndIdNot(
